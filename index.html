@@ -1,1 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Donut Graphics — Goldmine for Creators</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue-dark:   #0a1628;
+      --blue-mid:    #1a3a6e;
+      --blue-bright: #2563eb;
+      --blue-glow:   #3b82f6;
+      --blue-light:  #60a5fa;
+      --blue-pale:   #93c5fd;
+      --white:       #ffffff;
+      --black:       #050d1a;
+    }
 
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--blue-dark);
+      color: var(--white);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 16px;
+      overflow-x: hidden;
+    }
+
+    /* scanline overlay */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.07) 2px, rgba(0,0,0,0.07) 4px);
+      pointer-events: none; z-index: 9999;
+    }
+
+    /* ══ NAV ══ */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 64px;
+      background: rgba(5,13,26,0.92);
+      border-bottom: 2px solid var(--blue-glow);
+      box-shadow: 0 2px 30px rgba(59,130,246,0.25);
+      backdrop-filter: blur(10px);
+    }
+    .nav-logo { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+    .nav-logo img { height: 42px; width: auto; image-rendering: pixelated; }
+    .nav-logo-text {
+      font-family: 'Press Start 2P', monospace; font-size: 0.7rem;
+      color: var(--white); line-height: 1.5; text-shadow: 0 0 10px var(--blue-glow);
+    }
+    .nav-logo-text span {
+      display: block; font-family: 'Rajdhani', sans-serif; font-size: 0.65rem;
+      font-weight: 600; color: var(--blue-pale); letter-spacing: 0.15em;
+      text-transform: uppercase; text-shadow: none;
+    }
+    nav ul { display: flex; gap: 2rem; list-style: none; }
+    nav ul a {
+      font-family: 'Press Start 2P', monospace; font-size: 0.5rem;
+      color: var(--blue-pale); text-decoration: none; letter-spacing: 0.08em;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    nav ul a:hover { color: var(--white); text-shadow: 0 0 12px var(--blue-glow); }
+    .nav-btn {
+      font-family: 'Press Start 2P', monospace; font-size: 0.5rem;
+      background: var(--blue-bright); color: var(--white);
+      border: 2px solid var(--blue-glow); padding: 0.6rem 1rem;
+      cursor: pointer; text-decoration: none;
+      box-shadow: 0 0 12px rgba(59,130,246,0.5);
+      clip-path: polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+    .nav-btn:hover { background: var(--blue-glow); box-shadow: 0 0 24px rgba(59,130,246,0.9); }
+
+    /* ══ HERO ══ */
+    #hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      padding: 6rem 2rem 4rem; position: relative; overflow: hidden;
+    }
+    #hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.12) 1px, transparent 1px);
+      background-size: 40px 40px; animation: gridMove 20s linear infinite;
+    }
+    #hero::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%,-50%); width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    @keyframes gridMove { to { background-position: 40px 40px; } }
+
+    .hero-logo {
+      width: clamp(120px,20vw,220px); height: auto; margin-bottom: 2rem;
+      filter: drop-shadow(0 0 30px rgba(59,130,246,0.8));
+      animation: float 4s ease-in-out infinite; position: relative; z-index: 2;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+
+    .hero-title {
+      font-family: 'Press Start 2P', monospace; font-size: clamp(1.4rem,5vw,3rem);
+      color: var(--white); position: relative; z-index: 2; line-height: 1.3;
+      text-shadow: 0 0 20px var(--blue-glow), 0 0 60px var(--blue-bright), 4px 4px 0 var(--blue-dark);
+      animation: fadeUp 0.8s ease both;
+    }
+    .hero-sub {
+      font-family: 'Press Start 2P', monospace; font-size: clamp(0.5rem,1.5vw,0.85rem);
+      color: var(--blue-pale); margin-top: 1rem; letter-spacing: 0.2em;
+      position: relative; z-index: 2; animation: fadeUp 0.8s 0.2s ease both;
+    }
+    .hero-cta {
+      display: flex; gap: 1rem; margin-top: 3rem; position: relative; z-index: 2;
+      flex-wrap: wrap; justify-content: center; animation: fadeUp 0.8s 0.4s ease both;
+    }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+    /* shared button styles */
+    .btn-primary {
+      font-family: 'Press Start 2P', monospace; font-size: 0.6rem;
+      background: var(--blue-bright); color: var(--white);
+      border: 3px solid var(--blue-glow); padding: 1rem 1.8rem;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      box-shadow: 0 0 20px rgba(59,130,246,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
+      clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+      transition: all 0.2s;
+    }
+    .btn-primary:hover { background: var(--blue-glow); box-shadow: 0 0 40px rgba(59,130,246,1); transform: translateY(-2px); }
+    .btn-secondary {
+      font-family: 'Press Start 2P', monospace; font-size: 0.6rem;
+      background: transparent; color: var(--blue-pale);
+      border: 3px solid var(--blue-mid); padding: 1rem 1.8rem;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      clip-path: polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px));
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--blue-glow); color: var(--white); box-shadow: 0 0 20px rgba(59,130,246,0.4); }
+
+    /* ══ FEATURES ══ */
+    #features { padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
+    .section-title {
+      font-family: 'Press Start 2P', monospace; font-size: clamp(0.9rem,2.5vw,1.3rem);
+      color: var(--white); text-align: center; margin-bottom: 0.5rem;
+      text-shadow: 0 0 20px var(--blue-glow);
+    }
+    .section-sub {
+      font-family: 'Rajdhani', sans-serif; font-size: 1.1rem; color: var(--blue-pale);
+      text-align: center; margin-bottom: 3.5rem; letter-spacing: 0.1em; font-weight: 600;
+    }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: rgba(26,58,110,0.3); border: 2px solid var(--blue-mid);
+      padding: 2rem 1.5rem; position: relative; overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--blue-glow), transparent);
+      transform: translateX(-100%); transition: transform 0.5s;
+    }
+    .feature-card:hover::before { transform: translateX(100%); }
+    .feature-card:hover { border-color: var(--blue-glow); box-shadow: 0 0 30px rgba(59,130,246,0.3); transform: translateY(-4px); }
+    .feature-icon {
+      width: 44px; height: 44px; margin-bottom: 1.25rem; display: block;
+      color: var(--blue-light); filter: drop-shadow(0 0 8px rgba(96,165,250,0.5));
+    }
+    .feature-card h3 { font-family: 'Press Start 2P', monospace; font-size: 0.65rem; color: var(--white); margin-bottom: 0.75rem; line-height: 1.6; }
+    .feature-card p  { color: var(--blue-pale); font-size: 1rem; line-height: 1.6; font-weight: 500; }
+
+    /* ══ ASSETS ══ */
+    #assets { padding: 6rem 2rem; background: rgba(5,13,26,0.5); position: relative; }
+    #assets::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(37,99,235,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(37,99,235,0.06) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    .assets-inner { max-width: 800px; margin: 0 auto; position: relative; z-index: 1; }
+    .locked-overlay {
+      background: rgba(5,13,26,0.7); border: 2px solid var(--blue-glow);
+      text-align: center; padding: 3.5rem 2rem; margin: 3rem auto 0;
+    }
+    .locked-overlay .lock-svg {
+      display: block; width: 60px; height: 60px; margin: 0 auto 1.5rem;
+      color: var(--blue-pale); filter: drop-shadow(0 0 14px rgba(147,197,253,0.45));
+    }
+    .locked-overlay p {
+      font-family: 'Press Start 2P', monospace; font-size: 0.6rem;
+      color: var(--blue-pale); line-height: 2.4; margin-bottom: 2rem;
+    }
+
+    /* ══ DOWNLOAD (post-login) ══ */
+    #download-section { display: none; padding: 6rem 2rem; max-width: 1100px; margin: 0 auto; }
+    #download-section.visible { display: block; }
+    .download-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px,1fr)); gap: 1.25rem; margin-top: 2rem; }
+    .download-card {
+      background: rgba(26,58,110,0.35); border: 2px solid var(--blue-mid);
+      padding: 1.5rem 1rem; text-align: center; transition: all 0.2s;
+    }
+    .download-card:hover { border-color: var(--blue-glow); box-shadow: 0 0 20px rgba(59,130,246,0.3); transform: translateY(-3px); }
+    .download-card .dl-icon { width: 40px; height: 40px; margin: 0 auto 0.75rem; color: var(--blue-light); }
+    .download-card h4 { font-family: 'Press Start 2P', monospace; font-size: 0.5rem; color: var(--white); margin-bottom: 0.5rem; line-height: 1.6; }
+    .download-card p  { color: var(--blue-pale); font-size: 0.85rem; margin-bottom: 1rem; }
+    .btn-download {
+      font-family: 'Press Start 2P', monospace; font-size: 0.4rem;
+      background: var(--blue-bright); color: var(--white);
+      border: 2px solid var(--blue-glow); padding: 0.5rem 0.75rem;
+      cursor: pointer; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s;
+    }
+    .btn-download:hover { background: var(--blue-glow); box-shadow: 0 0 15px rgba(59,130,246,0.6); }
+
+    /* ══ MODAL ══ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(5,13,26,0.93); align-items: center; justify-content: center;
+      padding: 1rem; backdrop-filter: blur(8px);
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--blue-dark); border: 3px solid var(--blue-glow);
+      box-shadow: 0 0 60px rgba(59,130,246,0.5);
+      padding: 2.5rem; max-width: 480px; width: 100%; position: relative;
+      clip-path: polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--blue-pale);
+      cursor: pointer; padding: 0.25rem; line-height: 0; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--white); }
+    .modal-close svg { width: 18px; height: 18px; }
+    .modal-logo-row {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--blue-mid);
+    }
+    .modal-logo-row img { height: 40px; filter: drop-shadow(0 0 10px var(--blue-glow)); }
+    .modal-logo-row h2 { font-family: 'Press Start 2P', monospace; font-size: 0.65rem; color: var(--white); line-height: 1.6; }
+    .modal-logo-row .sub { font-family: 'Rajdhani', sans-serif; font-size: 0.75rem; color: var(--blue-pale); letter-spacing: 0.15em; margin-top: 0.2rem; }
+    .modal-desc { color: var(--blue-pale); font-size: 0.95rem; font-weight: 500; margin-bottom: 1.5rem; line-height: 1.6; }
+    .input-group { margin-bottom: 1.25rem; }
+    .input-group label { display: block; font-family: 'Press Start 2P', monospace; font-size: 0.5rem; color: var(--blue-pale); margin-bottom: 0.5rem; letter-spacing: 0.1em; }
+    .input-group input {
+      width: 100%; background: rgba(26,58,110,0.4); border: 2px solid var(--blue-mid);
+      color: var(--white); font-family: 'Rajdhani', sans-serif; font-size: 1rem; font-weight: 600;
+      padding: 0.75rem 1rem; outline: none; letter-spacing: 0.2em;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-group input:focus { border-color: var(--blue-glow); box-shadow: 0 0 15px rgba(59,130,246,0.3); }
+    .input-group input::placeholder { color: rgba(147,197,253,0.35); letter-spacing: 0.08em; }
+    .modal-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+    .modal-actions .btn-primary { flex: 1; justify-content: center; }
+    .status-msg {
+      font-family: 'Press Start 2P', monospace; font-size: 0.5rem; padding: 0.75rem;
+      margin-top: 1rem; text-align: center; display: none; line-height: 1.9;
+    }
+    .status-msg.success { display:block; color:#4ade80; border:1px solid #4ade80; background:rgba(74,222,128,0.08); }
+    .status-msg.error   { display:block; color:#f87171; border:1px solid #f87171; background:rgba(248,113,113,0.08); }
+    .status-msg.loading { display:block; color:var(--blue-pale); border:1px solid var(--blue-mid); }
+    .modal-hint { font-size: 0.85rem; color: var(--blue-pale); margin-top: 1.5rem; line-height: 1.6; opacity: 0.65; }
+
+    /* ══ FOOTER ══ */
+    footer { background: var(--black); border-top: 2px solid var(--blue-mid); padding: 2.5rem; text-align: center; }
+    footer p { font-family: 'Press Start 2P', monospace; font-size: 0.45rem; color: var(--blue-mid); line-height: 2.5; letter-spacing: 0.08em; }
+    footer a { color: var(--blue-pale); text-decoration: none; }
+    footer a:hover { color: var(--white); }
+
+    /* scroll hint */
+    .scroll-hint { position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; z-index: 2; animation: fadeUp 1s 1s ease both; }
+    .scroll-hint span { font-family: 'Press Start 2P', monospace; font-size: 0.4rem; color: var(--blue-pale); letter-spacing: 0.15em; }
+    .scroll-arrow { width: 16px; height: 16px; border-right: 2px solid var(--blue-pale); border-bottom: 2px solid var(--blue-pale); transform: rotate(45deg); animation: bounce 1.5s infinite; }
+    @keyframes bounce { 0%,100% { transform: rotate(45deg) translateY(0); } 50% { transform: rotate(45deg) translateY(5px); } }
+
+    @media (max-width: 640px) { nav ul { display: none; } .modal { padding: 1.5rem; } }
+  </style>
+</head>
+<body>
+
+<!-- ─── SVG SPRITE SHEET ─── -->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+  <symbol id="ic-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="7.5" cy="15.5" r="5.5"/>
+    <path d="M21 2l-9.6 9.6M15.5 7.5l3 3M11 12l2 2"/>
+  </symbol>
+  <symbol id="ic-layers" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+    <polyline points="2 17 12 22 22 17"/>
+    <polyline points="2 12 12 17 22 12"/>
+  </symbol>
+  <symbol id="ic-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+  </symbol>
+  <symbol id="ic-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    <polyline points="9 12 11 14 15 10"/>
+  </symbol>
+  <symbol id="ic-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+  </symbol>
+  <symbol id="ic-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+  </symbol>
+  <symbol id="ic-unlock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+    <path d="M7 11V7a5 5 0 0 1 9.9-1"/>
+  </symbol>
+  <symbol id="ic-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+    <polyline points="7 10 12 15 17 10"/>
+    <line x1="12" y1="15" x2="12" y2="3"/>
+  </symbol>
+  <symbol id="ic-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+    <line x1="18" y1="6" x2="6" y2="18"/>
+    <line x1="6" y1="6" x2="18" y2="18"/>
+  </symbol>
+  <symbol id="ic-package" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+    <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+    <line x1="12" y1="22.08" x2="12" y2="12"/>
+  </symbol>
+  <symbol id="ic-loader" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="2" x2="12" y2="6"/>
+    <line x1="12" y1="18" x2="12" y2="22"/>
+    <line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/>
+    <line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/>
+    <line x1="2" y1="12" x2="6" y2="12"/>
+    <line x1="18" y1="12" x2="22" y2="12"/>
+    <line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/>
+    <line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>
+  </symbol>
+</svg>
+
+<!-- ── NAV ── -->
+<nav>
+  <a class="nav-logo" href="#">
+    <img src="logo.png" alt="Donut Graphics" onerror="this.style.display='none'"/>
+    <div class="nav-logo-text">
+      DONUT GRAPHICS
+      <span>Goldmine For Creators</span>
+    </div>
+  </a>
+  <ul>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#assets">Assets</a></li>
+  </ul>
+  <a href="#" class="nav-btn" onclick="openModal(event)">GET ACCESS</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <img src="logo.png" alt="Donut Graphics" class="hero-logo" onerror="this.style.display='none'"/>
+  <h1 class="hero-title">DONUT GRAPHICS</h1>
+  <p class="hero-sub">// GOLDMINE FOR CREATORS //</p>
+  <div class="hero-cta">
+    <a href="#" class="btn-primary" onclick="openModal(event)">
+      <svg width="14" height="14"><use href="#ic-key"/></svg>
+      ENTER LICENSE KEY
+    </a>
+    <a href="#assets" class="btn-secondary">
+      <svg width="14" height="14"><use href="#ic-layers"/></svg>
+      BROWSE ASSETS
+    </a>
+  </div>
+  <div class="scroll-hint">
+    <span>SCROLL</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <h2 class="section-title">WHY DONUT GRAPHICS?</h2>
+  <p class="section-sub">Everything you need. One license. Unlimited creativity.</p>
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <svg class="feature-icon"><use href="#ic-layers"/></svg>
+      <h3>PREMIUM ASSETS</h3>
+      <p>Hand-crafted graphics ready to drop straight into your projects. Updated regularly.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon"><use href="#ic-bolt"/></svg>
+      <h3>INSTANT DOWNLOAD</h3>
+      <p>Validate your license once and access the full asset library immediately. No waiting.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon"><use href="#ic-shield"/></svg>
+      <h3>LICENSE PROTECTED</h3>
+      <p>Your license key is unique to you. Assets are exclusively for verified license holders.</p>
+    </div>
+
+    <div class="feature-card">
+      <svg class="feature-icon"><use href="#ic-star"/></svg>
+      <h3>CREATOR FOCUSED</h3>
+      <p>Built by creators, for creators. Every asset is optimized for real-world project use.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── ASSETS ── -->
+<section id="assets">
+  <div class="assets-inner">
+    <h2 class="section-title">ASSET LIBRARY</h2>
+    <p class="section-sub">License required to unlock downloads</p>
+
+    <div class="locked-overlay" id="locked-msg">
+      <svg class="lock-svg"><use href="#ic-lock"/></svg>
+      <p>ASSETS ARE LOCKED<br/>ENTER YOUR LICENSE KEY TO<br/>UNLOCK THE FULL LIBRARY</p>
+      <a href="#" class="btn-primary" onclick="openModal(event)">
+        <svg width="14" height="14"><use href="#ic-key"/></svg>
+        UNLOCK NOW
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ── DOWNLOAD SECTION (revealed after login) ── -->
+<div id="download-section">
+  <h2 class="section-title">YOUR ASSETS</h2>
+  <p class="section-sub">License verified — full library unlocked</p>
+  <div class="download-grid" id="download-grid"></div>
+</div>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <p>&copy; 2025 DONUT GRAPHICS &nbsp;|&nbsp; <a href="#">TERMS OF USE</a> &nbsp;|&nbsp; <a href="#">CONTACT</a></p>
+  <p style="margin-top:0.5rem;opacity:0.5;">A GOLDMINE FOR CREATORS</p>
+</footer>
+
+<!-- ── LICENSE MODAL ── -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">
+      <svg><use href="#ic-close"/></svg>
+    </button>
+
+    <div class="modal-logo-row">
+      <img src="logo.png" alt="Donut Graphics" onerror="this.style.display='none'"/>
+      <div>
+        <h2>DONUT GRAPHICS</h2>
+        <div class="sub">LICENSE PORTAL</div>
+      </div>
+    </div>
+
+    <p class="modal-desc">Enter your license key to unlock the full asset library. Each key is single-use and unique to you.</p>
+
+    <div class="input-group">
+      <label>LICENSE KEY</label>
+      <input type="text" id="license-input"
+             placeholder="Enter your license key"
+             onkeydown="if(event.key==='Enter')validateLicense()"/>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-primary" onclick="validateLicense()">
+        <svg width="14" height="14"><use href="#ic-key"/></svg>
+        VALIDATE KEY
+      </button>
+    </div>
+
+    <div class="status-msg" id="status-msg"></div>
+    <p class="modal-hint">Don't have a key? Purchase access to receive your license key.</p>
+  </div>
+</div>
+
+<script>
+  /*
+  ════════════════════════════════════════════════════════════════
+   CONFIG — update these two values before deploying
+  ════════════════════════════════════════════════════════════════
+   KEYS_URL  : Raw URL to your keys.txt file on GitHub.
+               Format: one key per line, plain text.
+               Example file contents:
+                 ALPHA-KEY-0001
+                 BETA-KEY-0002
+                 GAMMA-KEY-0003
+
+   ASSETS_BASE : Raw base URL to your /assets/ folder on GitHub.
+                 Files listed in ASSET_MANIFEST must exist there.
+  ════════════════════════════════════════════════════════════════
+  */
+  const KEYS_URL    = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/keys.txt';
+  const ASSETS_BASE = 'https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/assets/';
+
+  /*
+   Add entries here once you upload files to /assets/ on GitHub.
+   Each entry: { name: 'DISPLAY NAME', desc: 'Short description', file: 'filename.zip' }
+  */
+  const ASSET_MANIFEST = [
+    // { name: 'PACK NAME', desc: 'Description here', file: 'yourfile.zip' },
+  ];
+
+  /* ── modal helpers ── */
+  function openModal(e) {
+    if (e) e.preventDefault();
+    document.getElementById('modal').classList.add('active');
+    setTimeout(() => document.getElementById('license-input').focus(), 100);
+  }
+  function closeModal() { document.getElementById('modal').classList.remove('active'); }
+  function closeModalOutside(e) { if (e.target === document.getElementById('modal')) closeModal(); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  function setStatus(msg, type) {
+    const el = document.getElementById('status-msg');
+    el.textContent = msg;
+    el.className = 'status-msg ' + type;
+  }
+
+  /* ── license validation against keys.txt ── */
+  async function validateLicense() {
+    const raw = document.getElementById('license-input').value.trim();
+    if (!raw) { setStatus('PLEASE ENTER A LICENSE KEY', 'error'); return; }
+
+    setStatus('VALIDATING...', 'loading');
+
+    let validKeys = [];
+    try {
+      /* Fetch the raw keys.txt from your GitHub repo.
+         The file should have one key per line, e.g.:
+           ALPHA-KEY-0001
+           BETA-KEY-0002
+         Blank lines and lines starting with # are ignored.       */
+      const res = await fetch(KEYS_URL + '?nocache=' + Date.now());
+      if (!res.ok) throw new Error('fetch failed');
+      const text = await res.text();
+      validKeys = text
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('#'));
+    } catch (err) {
+      setStatus('COULD NOT REACH KEY SERVER — CHECK YOUR CONNECTION', 'error');
+      console.error(err);
+      return;
+    }
+
+    const inputKey = raw.toUpperCase();
+    const match    = validKeys.find(k => k.toUpperCase() === inputKey);
+
+    if (match) {
+      sessionStorage.setItem('dg_licensed', '1');
+      setStatus('LICENSE VALID — WELCOME!', 'success');
+      setTimeout(() => { closeModal(); unlockLibrary(); }, 1100);
+    } else {
+      setStatus('INVALID LICENSE KEY — PLEASE TRY AGAIN', 'error');
+    }
+  }
+
+  /* ── unlock the asset library ── */
+  function unlockLibrary() {
+    document.getElementById('locked-msg').style.display = 'none';
+
+    const section = document.getElementById('download-section');
+    const grid    = document.getElementById('download-grid');
+    section.classList.add('visible');
+    grid.innerHTML = '';
+
+    if (!ASSET_MANIFEST.length) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1;text-align:center;padding:3rem 1rem;">
+          <svg style="width:48px;height:48px;color:var(--blue-pale);margin-bottom:1.25rem;display:block;margin-left:auto;margin-right:auto;opacity:0.6">
+            <use href="#ic-package"/>
+          </svg>
+          <p style="font-family:'Press Start 2P',monospace;font-size:0.55rem;color:var(--blue-pale);line-height:2.4">
+            NO ASSETS UPLOADED YET.<br/>
+            ADD FILES TO YOUR GITHUB /ASSETS/ FOLDER<br/>
+            AND UPDATE THE ASSET_MANIFEST IN THIS FILE.
+          </p>
+        </div>`;
+    } else {
+      ASSET_MANIFEST.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'download-card';
+        card.innerHTML = `
+          <svg class="dl-icon"><use href="#ic-package"/></svg>
+          <h4>${a.name}</h4>
+          <p>${a.desc}</p>
+          <a class="btn-download"
+             href="${ASSETS_BASE}${a.file}"
+             download="${a.file}"
+             target="_blank">
+            <svg width="10" height="10"><use href="#ic-download"/></svg>
+            DOWNLOAD
+          </a>`;
+        grid.appendChild(card);
+      });
+    }
+
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+
+  /* Restore session across page reloads */
+  window.addEventListener('DOMContentLoaded', () => {
+    if (sessionStorage.getItem('dg_licensed')) unlockLibrary();
+  });
+</script>
+</body>
+</html>
